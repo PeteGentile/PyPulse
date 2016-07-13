@@ -139,6 +139,7 @@ class Archive:
         DAT_WTS = hdulist['SUBINT'].data['DAT_WTS']
         if not weight:
             DAT_WTS = np.ones(np.shape(DAT_WTS))
+        self.weights = DAT_WTS
         DAT_SCL = hdulist['SUBINT'].data['DAT_SCL']#.flatten()
         DAT_OFFS = hdulist['SUBINT'].data['DAT_OFFS']#.flatten()
 
@@ -273,23 +274,38 @@ class Archive:
         #    self.scrunch()
 
 
-    def scrunch(self,arg='Dp'):
+    def scrunch(self,arg='Dp',copy=False):
         """average the data cube along different axes"""
-        if 'T' in arg:
-            self.data[0,:,:,:] = np.mean(self.data,axis=0) 
-            self.data = self.data[0:1,:,:,:] #resize
-            self.durations = np.array([self.getDuration()])
-        if 'p' in arg:
-            self.pscrunch() #throw this the other way
-        if 'F' in arg:
-            self.data[:,:,0,:] = np.mean(self.data,axis=2)
-            self.data = self.data[:,:,0:1,:]
-        if 'D' in arg:
-            self.dedisperse()
-        if 'B' in arg:
-            self.data[:,:,:,0] = np.mean(self.data,axis=3)
-            self.data = self.data[:,:,:,0:1]
-        return self
+        if copy:
+            cdata = self.data
+            if 'T' in arg:
+                cdata[0,:,:,:] = np.mean(cdata,axis=0) 
+                cdata = cdata[0:1,:,:,:] #resize
+            if 'p' in arg:
+                self.pscrunch() #throw this the other way DO THIS LATER
+            if 'F' in arg:
+                cdata[:,:,0,:] = np.mean(cdata,axis=2)
+                cdata = cdata[:,:,0:1,:]
+            if 'B' in arg:
+                cdata[:,:,:,0] = np.mean(cdata,axis=3)
+                cdata = cdata[:,:,:,0:1]
+            return cdata
+        else:
+            if 'T' in arg:
+                self.data[0,:,:,:] = np.mean(self.data,axis=0) 
+                self.data = self.data[0:1,:,:,:] #resize
+                self.durations = np.array([self.getDuration()])
+            if 'p' in arg:
+                self.pscrunch() #throw this the other way
+            if 'F' in arg:
+                self.data[:,:,0,:] = np.mean(self.data,axis=2)
+                self.data = self.data[:,:,0:1,:]
+            if 'D' in arg:
+                self.dedisperse()
+            if 'B' in arg:
+                self.data[:,:,:,0] = np.mean(self.data,axis=3)
+                self.data = self.data[:,:,:,0:1]
+            return self
 
     def tscrunch(self,nsubint=None,factor=None):
         """average the data cube along the time dimension"""
